@@ -22,15 +22,6 @@ defaultGreen = 20
 defaultMinimum = 10
 defaultMaximum = 60
 
-# Vehicle timings (seconds per vehicle type to pass intersection)
-vehicle_timings = {
-    'car': 2.0,
-    'bus': 2.5,
-    'truck': 2.5,
-    'van': 2.25,
-    'bike': 1.0
-}
-
 signals = []
 noOfSignals = 4
 simTime = 300
@@ -186,59 +177,6 @@ class Vehicle(pygame.sprite.Sprite):
                 self.y -= self.speed
 
 
-def normalize_vehicle_type(vehicle_class):
-    """Normalize vehicle class names to match vehicle_timings keys"""
-    vehicle_class = vehicle_class.lower()
-    if 'bike' in vehicle_class or 'motorcycle' in vehicle_class or 'motorbike' in vehicle_class:
-        return 'bike'
-    elif 'car' in vehicle_class:
-        return 'car'
-    elif 'bus' in vehicle_class:
-        return 'bus'
-    elif 'truck' in vehicle_class:
-        return 'truck'
-    elif 'van' in vehicle_class:
-        return 'van'
-    else:
-        return 'car'  # Default to car
-
-
-def calculate_dynamic_green_time(direction):
-    """
-    Calculate green signal time based on vehicle density using the formula:
-    GST = Σ(NoOfVehicles_VC × AverageTime_VC) / NoOfLanes
-    
-    Where:
-    - VC = Vehicle Class
-    - NoOfVehicles_VC = Total count of vehicles from each class
-    - AverageTime_VC = Time each vehicle type takes to pass intersection
-    - NoOfLanes = Number of lanes (3 in this case)
-    """
-    
-    # Count vehicles by type in the direction (only non-crossed vehicles)
-    vehicle_count_by_type = {vtype: 0 for vtype in vehicle_timings.keys()}
-    
-    for lane in range(3):
-        for vehicle in vehicles[direction][lane]:
-            if vehicle.crossed == 0:  # Only count waiting vehicles
-                normalized_type = normalize_vehicle_type(vehicle.vehicleClass)
-                vehicle_count_by_type[normalized_type] += 1
-    
-    # Calculate total time needed
-    total_time = 0
-    for vtype, count in vehicle_count_by_type.items():
-        total_time += count * vehicle_timings[vtype]
-    
-    # Divide by number of lanes
-    no_of_lanes = 3
-    green_time = total_time / no_of_lanes if total_time > 0 else defaultMinimum
-    
-    # Apply min/max limits
-    green_time = max(defaultMinimum, min(green_time, defaultMaximum))
-    
-    return int(green_time)
-
-
 def load_detected_vehicles():
     """Load vehicles from detected_vehicles.json"""
     global detected_vehicles_from_file, vehicles_created
@@ -287,14 +225,6 @@ def initialize():
 
 def repeat():
     global currentGreen, currentYellow, nextGreen
-    
-    # Print dynamic green times for all 4 lanes
-    printDynamicGreenTimes()
-    
-    # Calculate dynamic green time based on vehicle density
-    dynamic_green = calculate_dynamic_green_time(directionNumbers[currentGreen])
-    signals[currentGreen].green = dynamic_green
-    
     while signals[currentGreen].green > 0:
         printStatus()
         updateValues()
@@ -330,16 +260,6 @@ def printStatus():
         else:
             print(f"   RED TS{i+1}-> r:{signals[i].red} y:{signals[i].yellow} g:{signals[i].green}")
     print()
-
-def printDynamicGreenTimes():
-    """Print the calculated dynamic green times for all 4 lanes"""
-    print("\n--- DYNAMIC GREEN SIGNAL TIMES FOR ALL LANES ---")
-    for i in range(noOfSignals):
-        direction = directionNumbers[i]
-        dynamic_green = calculate_dynamic_green_time(direction)
-        vehicle_count = sum(len(vehicles[direction][lane]) for lane in range(3))
-        print(f"Lane {i+1} ({direction.upper():5}): {dynamic_green}s green | {vehicle_count} vehicles waiting")
-    print("---" * 15)
 
 
 def updateValues():

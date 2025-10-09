@@ -45,7 +45,7 @@ directions = {
 # Clear all button
 col1, col2 = st.columns(2)
 with col1:
-    if st.button("Clear All Detections", use_container_width=True):
+    if st.button("Clear All Detections", width='stretch'):
         # Reset detections
         st.session_state.all_detections = {
             'right': [],
@@ -66,7 +66,7 @@ with col1:
         st.rerun()
 
 with col2:
-    if st.button("Save & Send to Simulation", use_container_width=True):
+    if st.button("Save & Send to Simulation", width='stretch'):
         # Save detections to JSON file
         with open(DETECTION_FILE, 'w') as f:
             json.dump(st.session_state.all_detections, f, indent=2)
@@ -100,7 +100,7 @@ for idx, (direction, info) in enumerate(directions.items()):
                 annotated_img = results[0].plot()
 
                 # Show annotated image
-                st.image(annotated_img, caption=f"Detections in {direction}: {uploaded_file.name}", use_container_width=True)
+                st.image(annotated_img, caption=f"Detections in {direction}: {uploaded_file.name}", width='stretch')
 
                 # Extract boxes
                 boxes = results[0].boxes
