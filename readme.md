@@ -1,0 +1,1 @@
+set the max timer for each green signal

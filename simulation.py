@@ -33,7 +33,7 @@ vehicle_timings = {
 
 signals = []
 noOfSignals = 4
-simTime = 300
+simTime = 500
 timeElapsed = 0
 
 currentGreen = 0
