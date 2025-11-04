@@ -113,15 +113,53 @@ class Vehicle(pygame.sprite.Sprite):
         vehicles[direction][lane].append(self)
         self.index = len(vehicles[direction][lane]) - 1
         
-        # Load vehicle image
-        path = f"images/{direction}/{vehicleClass}.png"
-        try:
-            self.originalImage = pygame.image.load(path)
-            self.currentImage = pygame.image.load(path)
-        except:
+        # Map similar vehicle types for fallback
+        vehicle_fallbacks = {
+            'motorbike': 'bike',
+            'bicycle': 'bike',
+            'van': 'car'
+        }
+        
+        # Load vehicle image from vehicles folder
+        # Try different extensions for the vehicle class and its fallback
+        image_loaded = False
+        vehicle_to_load = vehicleClass
+        
+        # Try original vehicle class first, then fallback
+        for attempt in [vehicleClass, vehicle_fallbacks.get(vehicleClass)]:
+            if attempt is None:
+                continue
+            for ext in ['.png', '.jpg', '.jpeg']:
+                path = f"images/vehicles/{attempt}{ext}"
+                if os.path.exists(path):
+                    try:
+                        self.originalImage = pygame.image.load(path)
+                        self.currentImage = pygame.image.load(path)
+                        image_loaded = True
+                        break
+                    except:
+                        continue
+            if image_loaded:
+                break
+        
+        # Fallback to colored rectangle if image not found
+        if not image_loaded:
             self.originalImage = pygame.Surface((50, 30))
             self.originalImage.fill((100, 100, 100))
             self.currentImage = self.originalImage.copy()
+        
+        # Rotate image based on direction
+        # Assuming original images face UP, rotate accordingly
+        rotation_angles = {
+            'right': -90,  # Rotate 90 degrees clockwise
+            'down': 180,   # Rotate 180 degrees
+            'left': 90,    # Rotate 90 degrees counter-clockwise
+            'up': 0        # No rotation needed
+        }
+        
+        if direction in rotation_angles and rotation_angles[direction] != 0:
+            self.originalImage = pygame.transform.rotate(self.originalImage, rotation_angles[direction])
+            self.currentImage = pygame.transform.rotate(self.currentImage, rotation_angles[direction])
         
         # Calculate stop position
         if direction == 'right':
